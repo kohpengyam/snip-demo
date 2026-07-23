@@ -7,6 +7,8 @@ snip-demo/
 ├── backend/    Bun API server (zero deps, in-memory Map)   ← branch: backend
 ├── frontend/   Angular 19 web app                         ← branch: frontend
 ├── cli/        zero-dep Node CLI                          ← branch: cli
+├── bundle/     GENERATED release (server + built UI + CLI) ← branch: bundle
+├── scripts/build-bundle.mjs                               ← assembles bundle/
 └── main        this superproject (.gitmodules + README)   ← branch: main
 ```
 
@@ -101,4 +103,18 @@ Without the pointer bump, `main` still pins the old commit.
 | `backend` | `server.js`, `package.json`, `README.md` | Bun 1.x, zero npm deps |
 | `frontend` | Angular 19 app (`src/`, `angular.json`, …) | Build → `dist/snip-frontend/browser` |
 | `cli` | `cli.js`, `package.json`, wrappers, `README.md` | Node ≥18, CommonJS, zero npm deps |
-| `main` | `.gitmodules`, `README.md` | Superproject — submodule pointers only |
+| `bundle` | **Generated** release: `server.js`, `cli.js`, `public/`, `Dockerfile` | Do not hand-edit — overwritten by build script |
+| `main` | `.gitmodules`, `README.md`, `scripts/` | Superproject — submodule pointers + build script |
+
+## Rebuilding the bundle
+
+```bash
+node scripts/build-bundle.mjs          # assemble locally (dry run)
+node scripts/build-bundle.mjs --push   # assemble + push bundle branch + bump pointer on main
+```
+
+The script:
+1. Updates `backend`, `frontend`, `cli` submodules to their branch tips
+2. Runs `npm install && ng build` in `frontend`
+3. Assembles `bundle/` — `server.js`, `cli.js`, `public/` (built UI), `.env`, `package.json`, `Dockerfile`, `.dockerignore`, `railway.json`
+4. Commits inside `bundle/` and bumps the pointer on `main` — both **guarded**: if nothing changed, no commit is made (safe no-op for hourly CI)
