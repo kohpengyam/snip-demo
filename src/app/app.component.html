@@ -1,0 +1,53 @@
+﻿<div class="container">
+  <h1>Snip</h1>
+  <p class="subtitle">Tiny URL shortener</p>
+
+  <form (ngSubmit)="submit()" class="shorten-form">
+    <input
+      type="text"
+      [value]="inputUrl()"
+      (input)="inputUrl.set($any($event.target).value)"
+      name="url"
+      placeholder="https://example.com/long/url"
+      required
+    />
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? "Shortening..." : "Shorten" }}
+    </button>
+  </form>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (shortLink()) {
+    <div class="result">
+      Short link: <a [href]="shortLink()!.shortUrl" target="_blank">{{ shortLink()!.shortUrl }}</a>
+    </div>
+  }
+
+  @if (links().length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Original URL</th>
+          <th>Hits</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (link of links(); track link.code) {
+          <tr>
+            <td><a [href]="link.shortUrl" target="_blank">{{ link.code }}</a></td>
+            <td class="original-url">{{ link.url }}</td>
+            <td>{{ link.hits }}</td>
+            <td>{{ link.createdAt.slice(0, 10) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p class="empty">No links yet. Shorten something!</p>
+  }
+</div>
